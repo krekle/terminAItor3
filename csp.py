@@ -201,4 +201,24 @@ def print_sudoku_solution(solution):
         if row == 2 or row == 5:
             print '------+-------+------'
 
-create_sudoku_csp('sudoku/easy.txt')
+def debug_print(csp):
+    for i in range(9):
+        output = ''
+        for j in range(9):
+            values = csp.domains[str(i) + "-" + str(j)]
+            if len(values) == 1:
+                output += " " + values[0] + " "
+            else:
+                output += "   "
+            
+            if j == 2 or j == 5:
+                output += "|"
+        print output
+        if i == 2 or i == 5:
+            print '---------+---------+---------' 
+
+if __name__ == "__main__":
+    csp = create_sudoku_csp('sudokus/easy.txt')
+    
+    debug_print(csp)
+    
