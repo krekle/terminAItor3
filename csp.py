@@ -114,7 +114,21 @@ class CSP:
         assignments and inferences that took place in previous
         iterations of the loop.
         """
-        # TODO: IMPLEMENT THIS
+        
+        finished = True
+        first_unassigned = None
+        for a in assignment:
+            if len(a) > 1:
+                finished = False
+                first_unassigned = a
+                break
+        
+        if finished:
+            return assignment
+        else:
+            pass
+            
+        
         pass
 
     def select_unassigned_variable(self, assignment):
@@ -140,7 +154,7 @@ class CSP:
                     return False
                 for k in self.get_all_neighboring_arcs(i):
                     if (k, i) is not (i, j):
-                        queue.push((k, i))
+                        queue.append((k, i))
         return True
         
 
@@ -155,9 +169,16 @@ class CSP:
         """
         
         revised = False
-        for x in enumerate(self.domain[i]):
-            if x is 2:
-                
+        for key, x in enumerate(self.domains.get(i)):
+            found = False
+            for y in enumerate(self.domains.get(j)):
+                if (y, x) in self.constraints.get(x, y):
+                    found = True
+                    break
+            
+            if found is False:
+                del self.domains[i][key]
+                return True
         return revised
         
         
@@ -167,6 +188,7 @@ def create_map_coloring_csp():
     textbook. This can be useful for testing your CSP solver as you
     develop your code.
     """
+    
     csp = CSP()
     states = [ 'WA', 'NT', 'Q', 'NSW', 'V', 'SA', 'T' ]
     edges = { 'SA': [ 'WA', 'NT', 'Q', 'NSW', 'V' ], 'NT': [ 'WA', 'Q' ], 'NSW': [ 'Q', 'V' ] }
@@ -183,6 +205,7 @@ def create_sudoku_csp(filename):
     """Instantiate a CSP representing the Sudoku board found in the text
     file named 'filename' in the current directory.
     """
+    
     csp = CSP()
     board = map(lambda x: x.strip(), open(filename, 'r'))
 
@@ -212,6 +235,7 @@ def print_sudoku_solution(solution):
     the method CSP.backtracking_search(), into a human readable
     representation.
     """
+    
     for row in range(9):
         for col in range(9):
             print solution['%d-%d' % (row, col)][0],
@@ -239,6 +263,7 @@ def debug_print(csp):
 
 if __name__ == "__main__":
     csp = create_sudoku_csp('sudokus/easy.txt')
-    
+    debug_print(csp)
+    csp.backtracking_search()
     debug_print(csp)
     
