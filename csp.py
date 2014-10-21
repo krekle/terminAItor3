@@ -19,6 +19,7 @@ class CSP:
         """Add a new variable to the CSP. 'name' is the variable name
         and 'domain' is a list of the legal values for the variable.
         """
+        
         self.variables.append(name)
         self.domains[name] = list(domain)
         self.constraints[name] = {}
@@ -28,6 +29,7 @@ class CSP:
         the lists 'a' and 'b', where the first component comes from list
         'a' and the second component comes from list 'b'.
         """
+        
         return itertools.product(a, b)
 
     def get_all_arcs(self):
@@ -35,12 +37,14 @@ class CSP:
         the CSP. The arcs/constraints are represented as tuples (i, j),
         indicating a constraint between variable 'i' and 'j'.
         """
+        
         return [ (i, j) for i in self.constraints for j in self.constraints[i] ]
 
     def get_all_neighboring_arcs(self, var):
         """Get a list of all arcs/constraints going to/from variable
         'var'. The arcs/constraints are represented as in get_all_arcs().
         """
+        
         return [ (i, var) for i in self.constraints[var] ]
 
     def add_constraint_one_way(self, i, j, filter_function):
@@ -52,6 +56,7 @@ class CSP:
         to add the constraint the other way, j -> i, as all constraints
         are supposed to be two-way connections!
         """
+        
         if not j in self.constraints[i]:
             # First, get a list of all possible pairs of values between variables i and j
             self.constraints[i][j] = self.get_all_possible_pairs(self.domains[i], self.domains[j])
@@ -127,8 +132,17 @@ class CSP:
         the lists of legal values for each undecided variable. 'queue'
         is the initial queue of arcs that should be visited.
         """
-        # TODO: IMPLEMENT THIS
-        pass
+        
+        while len(queue) > 0:
+            (i, j) = queue.pop(0)
+            if self.revise(assignment, i, j):
+                if len(self.domains[i]) == 0:
+                    return False
+                for k in self.get_all_neighboring_arcs(i):
+                    if (k, i) is not (i, j):
+                        queue.push((k, i))
+        return True
+        
 
     def revise(self, assignment, i, j):
         """The function 'Revise' from the pseudocode in the textbook.
@@ -139,8 +153,14 @@ class CSP:
         between i and j, the value should be deleted from i's list of
         legal values in 'assignment'.
         """
-        # TODO: IMPLEMENT THIS
-        pass
+        
+        revised = False
+        for x in enumerate(self.domain[i]):
+            if x is 2:
+                
+        return revised
+        
+        
 
 def create_map_coloring_csp():
     """Instantiate a CSP representing the map coloring problem from the
