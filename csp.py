@@ -118,7 +118,7 @@ class CSP:
         finished = True
         first_unassigned = None
         for a in assignment:
-            if len(a) > 1:
+            if len(assignment[a]) > 1:
                 finished = False
                 first_unassigned = a
                 break
@@ -126,10 +126,22 @@ class CSP:
         if finished:
             return assignment
         else:
-            pass
+            for val in self.domains[first_unassigned]:
+                if val in assignment.get(first_unassigned, [0]):
+                    new_assignment = copy.deepcopy(assignment)
+                    inf = self.inference(new_assignment, self.get_all_arcs())
+                    if inf is not False:
+                        res = self.backtrack(new_assignment)
+                        if res is not False:
+                            return res
+                
+                for idx, a in enumerate(assignment[first_unassigned]):
+                    if a is val:
+                        del assignment[first_unassigned][idx]
+                        break
             
         
-        pass
+        return False
 
     def select_unassigned_variable(self, assignment):
         """The function 'Select-Unassigned-Variable' from the pseudocode
@@ -150,14 +162,13 @@ class CSP:
         while len(queue) > 0:
             (i, j) = queue.pop(0)
             if self.revise(assignment, i, j):
-                if len(self.domains[i]) == 0:
+                if len(self.domains.get(i)) == 0:
                     return False
                 for k in self.get_all_neighboring_arcs(i):
-                    if (k, i) is not (i, j):
-                        queue.append((k, i))
+                    if k is not (i, j):
+                        queue.append(k)
         return True
         
-
     def revise(self, assignment, i, j):
         """The function 'Revise' from the pseudocode in the textbook.
         'assignment' is the current partial assignment, that contains
@@ -171,13 +182,13 @@ class CSP:
         revised = False
         for key, x in enumerate(self.domains.get(i)):
             found = False
-            for y in enumerate(self.domains.get(j)):
-                if (y, x) in self.constraints.get(x, y):
+            for y in enumerate(self.domains.get(j)): 
+               if (x, y) in self.constraints.get(i).get(j):
                     found = True
                     break
             
             if found is False:
-                del self.domains[i][key]
+                del self.domains.get(i)[key]
                 return True
         return revised
         
@@ -259,7 +270,9 @@ def debug_print(csp):
                 output += "|"
         print output
         if i == 2 or i == 5:
-            print '---------+---------+---------' 
+            print '---------+---------+---------'
+    print " "
+    print " "
 
 if __name__ == "__main__":
     csp = create_sudoku_csp('sudokus/easy.txt')
