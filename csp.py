@@ -77,6 +77,7 @@ class CSP:
         """This functions starts the CSP solver and returns the found
         solution.
         """
+        
         # Make a so-called "deep copy" of the dictionary containing the
         # domains of the CSP variables. The deep copy is required to
         # ensure that any changes made to 'assignment' does not have any
@@ -116,16 +117,17 @@ class CSP:
         """
         
         finished = True
-        first_unassigned = None
         for a in assignment:
             if len(assignment[a]) > 1:
                 finished = False
-                first_unassigned = a
                 break
         
         if finished:
             return assignment
         else:
+            #print assignment
+            return False
+            var = self.select_unassigned_variable(assignment)
             for val in self.domains[first_unassigned]:
                 if val in assignment.get(first_unassigned, [0]):
                     new_assignment = copy.deepcopy(assignment)
@@ -165,8 +167,9 @@ class CSP:
                 if len(self.domains.get(i)) == 0:
                     return False
                 for k in self.get_all_neighboring_arcs(i):
-                    if k is not (i, j):
+                    if cmp(k, (i, j)) is not 0:
                         queue.append(k)
+                
         return True
         
     def revise(self, assignment, i, j):
@@ -180,16 +183,18 @@ class CSP:
         """
         
         revised = False
-        for key, x in enumerate(self.domains.get(i)):
+        for x in self.domains.get(i):
             found = False
-            for y in enumerate(self.domains.get(j)): 
-               if (x, y) in self.constraints.get(i).get(j):
+            for y in self.domains.get(j):
+                if (x, y) in self.constraints.get(i).get(j):
                     found = True
                     break
             
             if found is False:
-                del self.domains.get(i)[key]
-                return True
+                for key, d in enumerate(self.domains.get(i)):
+                    if d == x:
+                        del self.domains.get(i)[key]
+                revised = True
         return revised
         
         
@@ -275,7 +280,7 @@ def debug_print(csp):
     print " "
 
 if __name__ == "__main__":
-    csp = create_sudoku_csp('sudokus/easy.txt')
+    csp = create_sudoku_csp('sudokus/medium.txt')
     debug_print(csp)
     csp.backtracking_search()
     debug_print(csp)
