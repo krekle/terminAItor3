@@ -1,9 +1,11 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 import copy
 import itertools
+import random
 
-class CSP:
+class CSP:    
     def __init__(self):
         # self.variables is a list of the variable names in the CSP
         self.variables = []
@@ -14,6 +16,10 @@ class CSP:
         # self.constraints[i][j] is a list of legal value pairs for
         # the variable pair (i, j)
         self.constraints = {}
+        
+        # Backtrack numbers
+        self.backtrack_called = 0
+        self.backtrack_failed = 0
 
     def add_variable(self, name, domain):
         """Add a new variable to the CSP. 'name' is the variable name
@@ -116,6 +122,9 @@ class CSP:
         iterations of the loop.
         """
         
+        # Increase backtrack_called
+        self.backtrack_called += 1
+        
         finished = True
         for a in assignment:
             if len(assignment[a]) > 1:
@@ -125,24 +134,25 @@ class CSP:
         if finished:
             return assignment
         else:
-            #print assignment
-            return False
+            debug_print(assignment)
             var = self.select_unassigned_variable(assignment)
-            for val in self.domains[first_unassigned]:
-                if val in assignment.get(first_unassigned, [0]):
-                    new_assignment = copy.deepcopy(assignment)
-                    inf = self.inference(new_assignment, self.get_all_arcs())
-                    if inf is not False:
-                        res = self.backtrack(new_assignment)
-                        if res is not False:
-                            return res
+            for value in self.domains[var]:
+                new_assignment = copy.deepcopy(assignment)
+                # Test 123
+                new_assignment[var] = [value]
+                inference = self.inference(new_assignment, self.get_all_arcs())
+                if inference is not False:
+                    result = self.backtrack(new_assignment)
+                    if result is not False:
+                        return result
                 
-                for idx, a in enumerate(assignment[first_unassigned]):
-                    if a is val:
-                        del assignment[first_unassigned][idx]
+                for idx, a in enumerate(assignment[var]):
+                    if a is value:
+                        del assignment[var][idx]
                         break
-            
-        
+                
+                
+        self.backtrack_failed += 1
         return False
 
     def select_unassigned_variable(self, assignment):
@@ -151,8 +161,13 @@ class CSP:
         in 'assignment' that have not yet been decided, i.e. whose list
         of legal values has a length greater than one.
         """
-        # TODO: IMPLEMENT THIS
-        pass
+        
+        unassigned = []
+        for a in assignment:
+            if len(assignment[a]) > 1:
+                unassigned.append(a)
+        
+        return random.choice(unassigned)
 
     def inference(self, assignment, queue):
         """The function 'AC-3' from the pseudocode in the textbook.
@@ -246,26 +261,11 @@ def create_sudoku_csp(filename):
 
     return csp
 
-def print_sudoku_solution(solution):
-    """Convert the representation of a Sudoku solution as returned from
-    the method CSP.backtracking_search(), into a human readable
-    representation.
-    """
-    
-    for row in range(9):
-        for col in range(9):
-            print solution['%d-%d' % (row, col)][0],
-            if col == 2 or col == 5:
-                print '|',
-        print
-        if row == 2 or row == 5:
-            print '------+-------+------'
-
-def debug_print(csp):
+def debug_print(solution):
     for i in range(9):
         output = ''
         for j in range(9):
-            values = csp.domains[str(i) + "-" + str(j)]
+            values = solution[str(i) + "-" + str(j)]
             if len(values) == 1:
                 output += " " + values[0] + " "
             else:
@@ -279,9 +279,66 @@ def debug_print(csp):
     print " "
     print " "
 
+def debug_information(csp):
+    # Return debug information
+    print " "
+    print "Backtrack was called \033[91m" + str(csp.backtrack_called) + "\033[0m times."
+    print "Backtrack returned false \033[91m" + str(csp.backtrack_failed) + "\033[0m times."
+
+def ask():
+    # Loop until we have a real answer
+    while True:
+        # Print question
+        print "Enter 1-4 on your keyboard to decide difficulity:"
+        print " "
+        
+        # Print options
+        print "\033[91m1.\033[0m Easy"
+        print "\033[91m2.\033[0m Medium"
+        print "\033[91m3.\033[0m Hard"
+        print "\033[91m4.\033[0m Very hard"
+        print " "
+        
+        # Get input
+        try:
+            # Ask user
+            ipt = str(input("Enter 1-4 value for map: "))
+            
+            # Try to parse
+            val = int(ipt)
+            
+            # Check valid number
+            if val >= 1 and val <= 4:
+                return val
+        except Exception:
+            # Just pass here
+            pass
+        
+        # Print angry error message
+        print " "
+        print "\033[91m═══════════════════════════════════════════════════════════════════════════\033[0m"
+        print " "
+
+def main():
+    # Maps
+    maps = ['easy', 'medium', 'hard', 'veryhard']
+    
+    # Find what problem to solve
+    difficulity = ask()
+    
+    # Create new csp
+    csp = create_sudoku_csp('sudokus/' + maps[difficulity - 1] + '.txt')
+    
+    # Start backtracking
+    result = csp.backtracking_search()
+    
+    # Print out the final output
+    debug_print(result)
+    
+    # Print debug information
+    debug_information(csp)
+
 if __name__ == "__main__":
-    csp = create_sudoku_csp('sudokus/medium.txt')
-    debug_print(csp)
-    csp.backtracking_search()
-    debug_print(csp)
+    # Running main
+    main()
     
