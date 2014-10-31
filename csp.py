@@ -122,39 +122,54 @@ class CSP:
         iterations of the loop.
         """
         
+        # Print the board 
+        debug_print(assignment)
+        
         # Increase backtrack_called
         self.backtrack_called += 1
         
+        # Check if the board is filled out
         finished = True
-        for a in assignment:
-            if len(assignment[a]) > 1:
+        for key in assignment.keys():
+            if len(assignment[key]) is not 1:
                 finished = False
-                break
         
+        # Return if finished
         if finished:
             return assignment
-        else:
-            debug_print(assignment)
-            var = self.select_unassigned_variable(assignment)
-            for value in self.domains[var]:
-                new_assignment = copy.deepcopy(assignment)
-                # Test 123
-                new_assignment[var] = [value]
+        
+        # Select unassigned variable from the stack
+        var = self.select_unassigned_variable(assignment)
+        
+        # Loop each value in the current variable
+        for value in assignment[var]:
+            # Copy assignment to make a guess
+            new_assignment = copy.deepcopy(assignment)
+            
+            # Assign guess
+            new_assignment[var] = [value]
+            
+            # Check if value is in the current domain
+            if value in self.domains[var]:
+                # Run AC3 to validate the guess
                 inference = self.inference(new_assignment, self.get_all_arcs())
-                if inference is not False:
+                
+                # Check if guess is still valid
+                if inference:
+                    # Recursively call backtrack on the current state
                     result = self.backtrack(new_assignment)
+                    
+                    # Check if this backtrack tree failed
                     if result is not False:
+                        # Did not fail, return result
                         return result
                 
-                for idx, a in enumerate(assignment[var]):
-                    if a is value:
-                        del assignment[var][idx]
-                        break
-                
-                
+        # Increase backtrack failed
         self.backtrack_failed += 1
+        
+        # The backtrack failed, return false
         return False
-
+    
     def select_unassigned_variable(self, assignment):
         """The function 'Select-Unassigned-Variable' from the pseudocode
         in the textbook. Should return the name of one of the variables
@@ -162,12 +177,18 @@ class CSP:
         of legal values has a length greater than one.
         """
         
-        unassigned = []
-        for a in assignment:
-            if len(assignment[a]) > 1:
-                unassigned.append(a)
+        # Placeholder
+        holder = (None, 10)
         
-        return random.choice(unassigned)
+        # Loop all the keys in assigment
+        for key in assignment.keys():
+            # Check if the current key can be selected
+            if len(assignment[key]) < holder[1] and len(assignment[key]) is not 1:
+                # Add to list
+                holder = (key, len(assignment[key]))
+        
+        # Return the variable we selected
+        return holder[0]
 
     def inference(self, assignment, queue):
         """The function 'AC-3' from the pseudocode in the textbook.
@@ -176,15 +197,26 @@ class CSP:
         is the initial queue of arcs that should be visited.
         """
         
+        # Loop while queue is not empty
         while len(queue) > 0:
+            # Pop the first element
             (i, j) = queue.pop(0)
+            
+            # Check if current assignment satifies the constraints
             if self.revise(assignment, i, j):
+                # Is satisfied, check if domain is empty
                 if len(self.domains.get(i)) == 0:
+                    # Domain is empty, return false
                     return False
-                for k in self.get_all_neighboring_arcs(i):
-                    if cmp(k, (i, j)) is not 0:
-                        queue.append(k)
                 
+                # Loop all the neighbouring arcs
+                for k in self.get_all_neighboring_arcs(i):
+                    # Check if the current neighbouring arc is not the arc we popped from the queue
+                    if cmp(k, (i, j)) is not 0:
+                        # It is not, append to queue to check later
+                        queue.append(k)
+        
+        # Contains illegal moves, return true
         return True
         
     def revise(self, assignment, i, j):
@@ -197,22 +229,28 @@ class CSP:
         legal values in 'assignment'.
         """
         
+        # Variable to keep track of the revised state
         revised = False
-        for x in self.domains.get(i):
+        
+        # Loop all nodes in assignment
+        for x in assignment[i]:
+            # Loop all nodes one more time and check if the constraint was found
             found = False
-            for y in self.domains.get(j):
-                if (x, y) in self.constraints.get(i).get(j):
+            for y in assignment[j]:
+                # Check if constraint matches the current nodes
+                if (x, y) in self.constraints[i][j]:
+                    # Constraint was found, break out of inner loop
                     found = True
                     break
             
+            # If found, remove the value from the assigment
             if found is False:
-                for key, d in enumerate(self.domains.get(i)):
-                    if d == x:
-                        del self.domains.get(i)[key]
+                assignment[i].remove(x)
                 revised = True
+        
+        # Return the final value of revised
         return revised
-        
-        
+
 
 def create_map_coloring_csp():
     """Instantiate a CSP representing the map coloring problem from the
@@ -262,26 +300,29 @@ def create_sudoku_csp(filename):
     return csp
 
 def debug_print(solution):
-    for i in range(9):
-        output = ''
-        for j in range(9):
-            values = solution[str(i) + "-" + str(j)]
-            if len(values) == 1:
-                output += " " + values[0] + " "
-            else:
-                output += "   "
-            
-            if j == 2 or j == 5:
-                output += "|"
-        print output
-        if i == 2 or i == 5:
-            print '---------+---------+---------'
+    if solution is not False:
+        for i in range(9):
+            output = ''
+            for j in range(9):
+                values = solution[str(i) + "-" + str(j)]
+                if len(values) == 1:
+                    output += " " + values[0] + " "
+                else:
+                    output += "   "
+                
+                if j == 2 or j == 5:
+                    output += "|"
+            print output
+            if i == 2 or i == 5:
+                print '---------+---------+---------'
+    else:
+        print "Did not find a solution"
+    
     print " "
     print " "
 
 def debug_information(csp):
     # Return debug information
-    print " "
     print "Backtrack was called \033[91m" + str(csp.backtrack_called) + "\033[0m times."
     print "Backtrack returned false \033[91m" + str(csp.backtrack_failed) + "\033[0m times."
 
