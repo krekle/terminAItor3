@@ -3,7 +3,7 @@
 
 import copy
 import itertools
-import random
+
 
 class CSP:    
     def __init__(self):
@@ -270,6 +270,7 @@ def create_map_coloring_csp():
             csp.add_constraint_one_way(other_state, state, lambda i, j: i != j)
     return csp
 
+
 def create_sudoku_csp(filename):
     """Instantiate a CSP representing the Sudoku board found in the text
     file named 'filename' in the current directory.
@@ -321,10 +322,12 @@ def debug_print(solution):
     print " "
     print " "
 
+
 def debug_information(csp):
     # Return debug information
     print "Backtrack was called \033[91m" + str(csp.backtrack_called) + "\033[0m times."
     print "Backtrack returned false \033[91m" + str(csp.backtrack_failed) + "\033[0m times."
+
 
 def ask():
     # Loop until we have a real answer
@@ -360,6 +363,7 @@ def ask():
         print "\033[91m═══════════════════════════════════════════════════════════════════════════\033[0m"
         print " "
 
+
 def main():
     # Maps
     maps = ['easy', 'medium', 'hard', 'veryhard']
@@ -379,7 +383,7 @@ def main():
     # Print debug information
     debug_information(csp)
 
+
 if __name__ == "__main__":
     # Running main
     main()
-    
